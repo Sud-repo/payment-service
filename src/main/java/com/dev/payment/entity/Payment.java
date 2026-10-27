@@ -1,7 +1,7 @@
 package com.dev.payment.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -11,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -24,7 +23,7 @@ public class Payment {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 	
-	private String amount;
+	private BigDecimal amount;
 	
 	private String currency;
 	
@@ -39,8 +38,5 @@ public class Payment {
 	@ManyToOne
 	@JoinColumn(name = "merchant_id")
 	private Merchant merchant;
-
-	@OneToMany
-	private List<PaymentAttempt> paymentAttempts;
 
 }

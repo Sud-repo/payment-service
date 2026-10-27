@@ -3,6 +3,8 @@ package com.dev.payment.entity;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,7 +26,8 @@ public class Merchant {
 	
 	private String status;
 
-	@OneToMany
+	@OneToMany(mappedBy = "merchant")
+	@JsonManagedReference
 	private List<ApiKey> apiKeys;
 
 }

@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -38,6 +40,7 @@ public class ApiKey {
 
 	@ManyToOne
 	@JoinColumn(name = "merchant_id")
+	@JsonBackReference
 	private Merchant merchant;
 
 	@ElementCollection

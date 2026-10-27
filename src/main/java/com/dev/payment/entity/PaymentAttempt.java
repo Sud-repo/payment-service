@@ -22,7 +22,7 @@ public class PaymentAttempt {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 	
-	private String attemptNumber;
+	private Integer attemptNumber;
 	
 	private String paymentProvider;
 	

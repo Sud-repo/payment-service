@@ -33,7 +33,7 @@ public class ApiKey {
 	@Column(name = "key_hash")
 	private String keyHash;
 	
-	private Boolean status;
+	private Boolean isActive;
 	
 	@Column(name = "expires_at")
 	private Date expiresAt;

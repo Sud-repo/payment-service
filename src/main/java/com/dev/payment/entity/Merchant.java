@@ -3,9 +3,12 @@ package com.dev.payment.entity;
 import java.util.List;
 import java.util.UUID;
 
+import com.dev.payment.enums.MerchantStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -27,8 +30,9 @@ public class Merchant {
 	private String name;
 
 	private String email;
-	
-	private String status;
+
+	@Enumerated(EnumType.STRING)
+	private MerchantStatus status;
 
 	@OneToMany(mappedBy = "merchant")
 	@JsonManagedReference

@@ -3,8 +3,12 @@ package com.dev.payment.entity;
 import java.util.Date;
 import java.util.UUID;
 
+import com.dev.payment.enums.IdempotencyStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,7 +33,9 @@ public class IdempotencyRecord {
 	@Column(name = "request_hash")
 	private String requestHash;
 
-	private String status;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private IdempotencyStatus status;
 	
 	@Column(name = "expires_at")
 	private Date expiresAt;

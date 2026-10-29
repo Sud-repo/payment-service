@@ -3,8 +3,12 @@ package com.dev.payment.entity;
 import java.util.Date;
 import java.util.UUID;
 
+import com.dev.payment.enums.PaymentAttemptStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,7 +32,8 @@ public class PaymentAttempt {
 	
 	private String providerPaymentId;
 
-	private String status;
+	@Enumerated(EnumType.STRING)
+	private PaymentAttemptStatus status;
 	
 	private String comments;
 

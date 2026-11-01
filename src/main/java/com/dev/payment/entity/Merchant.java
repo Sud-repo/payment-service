@@ -14,7 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Entity
@@ -26,7 +26,7 @@ public class Merchant {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
-	@Min(value = 3)
+	@Size(min = 3)
 	private String name;
 
 	private String email;

@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import com.dev.payment.security.entity.User;
 import com.dev.payment.security.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -28,9 +31,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
             .withUsername(user.getUserName())
             .password(user.getPassword())
-            .authorities(new SimpleGrantedAuthority(
-                    user.getRole().getRoleName()
-                    ))
+            .authorities(new SimpleGrantedAuthority(user.getRole().getRoleName()))
             .build();
     }
 }

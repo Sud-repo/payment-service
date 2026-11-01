@@ -5,10 +5,10 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import com.dev.payment.exception.AuthenticationException;
 import com.dev.payment.model.ApiResponse;
 import com.dev.payment.model.LoginRequest;
 import com.dev.payment.model.LoginResponseDto;
@@ -42,16 +42,12 @@ public class LoginService {
 		Optional<User> optUser = userRepository.findByUserName(email);
 		// authenticate the user
 		if (optUser.isEmpty() || !authenticate(loginRequest)) {
-			return ResponseEntity
-					.status(HttpStatus.UNAUTHORIZED.value())
-					.body(new ApiResponse<LoginResponseDto>(false, 401, Constants.INVALID_CREDENTIALS, null));
+			throw new AuthenticationException(Constants.INVALID_CREDENTIALS);
 		}
 		
 		User user = optUser.get();
 		if (!Boolean.TRUE.equals(user.getIsActive())) {
-			return ResponseEntity
-					.status(HttpStatus.BAD_REQUEST.value())
-					.body(new ApiResponse<LoginResponseDto>(false, 400, Constants.INVALID_CREDENTIALS, null));
+			throw new AuthenticationException(Constants.INVALID_CREDENTIALS);
 		}
 		
 		String roleName = user.getRole().getRoleName();

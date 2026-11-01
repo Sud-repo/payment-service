@@ -5,5 +5,5 @@ public enum PaymentAttemptStatus {
     PENDING,
     SUCCESS,
     FAILED,
-    TIMEOUT
+    UNKNOWN
 }

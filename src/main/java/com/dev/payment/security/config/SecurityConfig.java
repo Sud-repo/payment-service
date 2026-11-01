@@ -28,6 +28,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -58,7 +60,7 @@ public class SecurityConfig {
 	
     
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
@@ -76,12 +78,27 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                 		.requestMatchers(WHITELISTED_URLS).permitAll()
                 		// add Authorization conditions later...
+                		.requestMatchers(
+                		        PathPatternRequestMatcher.pathPattern(
+                		            HttpMethod.POST,
+                		            "/admin/v1/merchants"
+                		        ),
+                		        PathPatternRequestMatcher.pathPattern(
+            		        		HttpMethod.POST,
+            		        		"/admin/v1/apikeys/generate"
+        		        		)
+            		        ).hasAuthority("MERCHANT_REGISTRAR")
+
+            		    .requestMatchers(
+            		        PathPatternRequestMatcher.pathPattern(
+            		            HttpMethod.PATCH,
+            		            "/admin/v1/merchants/{merchantId}/status"
+            		        )).hasAuthority("MERCHANT_APPROVER")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 ->
-	                oauth2.jwt(
-	                    org.springframework.security.config.Customizer
-	                        .withDefaults()
-	                )
+	                oauth2.jwt(jwt -> 
+	                	jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+            	    )
 	            )
 //                .addFilterBefore( >> Oauth Resource Server will handle JWT Verification
 //                        apiKeyAuthFilter,
@@ -183,6 +200,23 @@ public class SecurityConfig {
         return decoder;
     }
 
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+
+        JwtGrantedAuthoritiesConverter authoritiesConverter =
+            new JwtGrantedAuthoritiesConverter();
+
+        authoritiesConverter.setAuthoritiesClaimName("role");
+        authoritiesConverter.setAuthorityPrefix("");
+
+        JwtAuthenticationConverter converter =
+            new JwtAuthenticationConverter();
+
+        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+
+        return converter;
+    }
 
     @Bean // disable servlet-container (Tomcat) registration
     FilterRegistrationBean<ApiKeyAuthFilter> apiKeyFilterRegistration(ApiKeyAuthFilter filter) {

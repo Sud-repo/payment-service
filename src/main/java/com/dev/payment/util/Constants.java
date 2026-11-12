@@ -2,6 +2,10 @@ package com.dev.payment.util;
 
 public class Constants {
 	
+	public final static String MERCHANT_ROLE = "MERCHANT";
+	
+	public final static String ADMIN_ROLE = "ADMIN";
+	
 	public final static String INVALID_CREDENTIALS = "Invalid Credentials";
 
 	public final static String API_KEY_PREFIX = "ps_mer_";
@@ -30,7 +34,7 @@ public class Constants {
 	
 	public final static String READ_PERMISSION = "payment:read";
 
-	public final static String MERCHANT_API_KEY_EXISTS = "APIs already provided";
+	public final static String MERCHANT_API_KEY_EXISTS = "API Keys already Issued";
 
 	public final static String DOMAIN = "http://localhost:8080";
 

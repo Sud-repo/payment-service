@@ -16,15 +16,9 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID> {
 
 	boolean existsByName(String name);
 
-	boolean existsByEmail(String email);
-
-	boolean existsByNameOrEmail(String name, String email);
-
 	Optional<Merchant> findByName(String name);
 
-	Optional<Merchant> findByEmail(String email);
-
-	Optional<Merchant> findByNameOrEmail(String name, String email);
+	Optional<Merchant> findByUser_Id(UUID userId);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT m FROM Merchant m WHERE m.id = :id")

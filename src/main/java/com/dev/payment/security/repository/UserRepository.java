@@ -9,6 +9,7 @@ import com.dev.payment.security.entity.User;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
+	boolean existsByUserName(String userName);
 	Optional<User> findByUserName(String userName);
 
 }

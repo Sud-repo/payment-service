@@ -50,19 +50,18 @@ public class ApiKeyService {
 						Constants.MERCHANT_NOT_FOUND
 				));
 
-		// 2. check if merchant status is not approved
-		if (merchant.getStatus() == MerchantStatus.REGISTERED ||
-		        merchant.getStatus() == MerchantStatus.REJECTED) {
-			return ResponseEntity
-					.status(HttpStatus.BAD_REQUEST)
-					.body(new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), Constants.MERCHANT_NOT_APPROVED, null));
-		}
-
-		// 3. check if API keys issued for the merchant
+		// 2. check if API keys issued for the merchant
 		if (merchant.getStatus() == MerchantStatus.ISSUED_API) {
 			return ResponseEntity
 					.status(HttpStatus.CONFLICT)
 					.body(new ApiResponse<>(false, HttpStatus.CONFLICT.value(), Constants.MERCHANT_API_KEY_EXISTS, null));
+		}
+
+		// 3. check if merchant status is not approved
+		if (merchant.getStatus() != MerchantStatus.APPROVED) {
+			return ResponseEntity
+					.status(HttpStatus.BAD_REQUEST)
+					.body(new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), Constants.MERCHANT_NOT_APPROVED, null));
 		}
 
 		// 4. create 2 ApiKey entities:

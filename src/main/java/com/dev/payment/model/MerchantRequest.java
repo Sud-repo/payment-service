@@ -14,13 +14,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MerchantRequest {
 
-    @NotBlank(message = "Merchant name is required")
-    @Size(min = 3, message = "Merchant name must be at least 3 characters")
+    @NotBlank(message = "User name is required")
     private String name;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
+
+    @NotBlank(message = "Password is required")
+    private String password;
+
+    @NotBlank(message = "Merchant name is required")
+    @Size(min = 3, message = "Merchant name must be at least 3 characters")
+    private String merchantName;
 
 }
 

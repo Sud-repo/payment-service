@@ -56,6 +56,7 @@ public class SecurityConfig {
 
     public static PathPatternRequestMatcher[] WHITELISTED_URLS = {
 			PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/admin/login"),
+			PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/admin/v1/merchants/register"),
 	};
 	
     
@@ -80,20 +81,16 @@ public class SecurityConfig {
                 		// add Authorization conditions later...
                 		.requestMatchers(
                 		        PathPatternRequestMatcher.pathPattern(
-                		            HttpMethod.POST,
-                		            "/admin/v1/merchants"
-                		        ),
-                		        PathPatternRequestMatcher.pathPattern(
             		        		HttpMethod.POST,
             		        		"/admin/v1/apikeys/generate"
         		        		)
-            		        ).hasAuthority("MERCHANT_REGISTRAR")
+            		        ).hasAuthority(Constants.MERCHANT_ROLE)
 
             		    .requestMatchers(
             		        PathPatternRequestMatcher.pathPattern(
             		            HttpMethod.PATCH,
             		            "/admin/v1/merchants/{merchantId}/status"
-            		        )).hasAuthority("MERCHANT_APPROVER")
+            		        )).hasAuthority(Constants.ADMIN_ROLE)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 ->
 	                oauth2.jwt(jwt -> 

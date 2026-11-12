@@ -10,6 +10,7 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -43,7 +44,7 @@ public class ApiKey {
 	@JsonBackReference
 	private Merchant merchant;
 
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(
 		    name = "api_key_permissions",
 		    joinColumns = @JoinColumn(name = "api_key_id")

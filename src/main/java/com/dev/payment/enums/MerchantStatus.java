@@ -5,5 +5,5 @@ public enum MerchantStatus {
 	REGISTERED,
 	APPROVED,
 	REJECTED,
-	ISSUED_API
+	ACTIVE
 }

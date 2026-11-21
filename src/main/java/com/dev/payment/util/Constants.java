@@ -8,7 +8,9 @@ public class Constants {
 	
 	public final static String INVALID_CREDENTIALS = "Invalid Credentials";
 
-	public final static String API_KEY_PREFIX = "ps_mer_";
+	public final static String TEST_API_KEY_PREFIX = "ps_test_";
+
+	public final static String PROD_API_KEY_PREFIX = "ps_live_";
 
 	public final static String AUDIENCE = "admin-api";
 
@@ -30,10 +32,6 @@ public class Constants {
 
 	public final static String MERCHANT_ID_REQUIRED = "Merchant ID is required";
 	
-	public final static String CREATE_PERMISSION = "payment:create";
-	
-	public final static String READ_PERMISSION = "payment:read";
-
 	public final static String MERCHANT_API_KEY_EXISTS = "API Keys already Issued";
 
 	public final static String DOMAIN = "http://localhost:8080";
@@ -41,5 +39,11 @@ public class Constants {
 	public final static String CREATE_PAYMENT_ENDPOINT = "api/v1/payments  (POST)";
 
 	public final static String READ_PAYMENT_ENDPOINT = "api/v1/payments  (GET)";
+
+	public final static String PAYMENT_ENDPOINT = "/api/v1/payments";
+
+	public static final int MERCHANT_PREFIX_LENGTH = 3;
+	
+	public static final int Key_PREFIX_LENGTH = 8;
 
 }

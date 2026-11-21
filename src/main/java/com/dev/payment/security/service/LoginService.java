@@ -66,8 +66,9 @@ public class LoginService {
 		String roleName = user.getRole().getRoleName();
 		Merchant merchant = merchantRepository.findByUser_Id(user.getId())
 				.orElseThrow(() -> new ResourceNotFoundException("Merchant Not Fount"));
-		LoginResponseDto loginResponse = new LoginResponseDto();
+
 		// generate token
+		LoginResponseDto loginResponse = new LoginResponseDto();
 		loginResponse.setAuthToken(jwtService.generateToken(email, roleName, merchant.getName()));
 		loginResponse.setName(user.getName());
 		loginResponse.setUserName(email);

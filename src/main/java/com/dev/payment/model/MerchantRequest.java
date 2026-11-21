@@ -1,5 +1,7 @@
 package com.dev.payment.model;
 
+import com.dev.payment.util.Constants;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,7 +27,8 @@ public class MerchantRequest {
     private String password;
 
     @NotBlank(message = "Merchant name is required")
-    @Size(min = 3, message = "Merchant name must be at least 3 characters")
+    @Size(min = Constants.MERCHANT_PREFIX_LENGTH, 
+    message = "Merchant name must be at least " +  Constants.MERCHANT_PREFIX_LENGTH + " characters")
     private String merchantName;
 
 }

@@ -34,6 +34,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
+import com.dev.payment.enums.ApiKeyPermission;
 import com.dev.payment.util.Constants;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
@@ -78,7 +79,6 @@ public class SecurityConfig {
                                 SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                 		.requestMatchers(WHITELISTED_URLS).permitAll()
-                		// add Authorization conditions later...
                 		.requestMatchers(
                 		        PathPatternRequestMatcher.pathPattern(
             		        		HttpMethod.POST,
@@ -121,11 +121,29 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll())
+                		.requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/payments/**").hasAuthority(ApiKeyPermission.PAYMENT_CREATE.toString())
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/payments/**").hasAuthority(ApiKeyPermission.PAYMENT_READ.toString())
+//
+//                        .requestMatchers(
+//                                HttpMethod.POST,
+//                                "/api/v1/refunds/**").hasAuthority("REFUND_CREATE")
+//
+//                        .requestMatchers(
+//                                HttpMethod.GET,
+//                                "/api/v1/refunds/**").hasAuthority("REFUND_READ")
+
+                        .anyRequest().denyAll()
+                )
                 .addFilterBefore(
                         apiKeyAuthFilter,
                         UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(handler -> handler
+                		.accessDeniedHandler(accessDeniedExceptionHandler)
                 		.authenticationEntryPoint(authEntryPoint)
                 		)
                 .build();

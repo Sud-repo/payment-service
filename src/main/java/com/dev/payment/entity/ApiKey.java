@@ -4,12 +4,16 @@ import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
+import com.dev.payment.enums.ApiKeyPermission;
+import com.dev.payment.enums.Environment;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,7 +39,10 @@ public class ApiKey {
 	private String keyHash;
 	
 	private Boolean isActive;
-	
+
+	@Enumerated(EnumType.STRING)
+	private Environment environment;
+
 	@Column(name = "expires_at")
 	private Date expiresAt;
 
@@ -44,11 +51,13 @@ public class ApiKey {
 	@JsonBackReference
 	private Merchant merchant;
 
+	@Enumerated(EnumType.STRING)
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(
 		    name = "api_key_permissions",
 		    joinColumns = @JoinColumn(name = "api_key_id")
 		)
-	private Set<String> permission;
-		
+	@Column(name = "permission")
+	private Set<ApiKeyPermission> permissions;
+
 }

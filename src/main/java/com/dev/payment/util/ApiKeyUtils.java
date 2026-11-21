@@ -7,15 +7,15 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
 
-import org.springframework.util.StringUtils;
-import static com.dev.payment.util.Constants.API_KEY_PREFIX;
+import com.dev.payment.enums.Environment;
+
+import static com.dev.payment.util.Constants.TEST_API_KEY_PREFIX;
+import static com.dev.payment.util.Constants.PROD_API_KEY_PREFIX;;
 
 
 public class ApiKeyUtils {
 
 	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-	private static final int MERCHANT_PREFIX_LENGTH = 3;
-
 
     public static String generateApiKey() {
         byte[] key = new byte[32]; // 256 bits
@@ -37,17 +37,30 @@ public class ApiKeyUtils {
             throw new IllegalStateException("SHA-256 algorithm is unavailable", e);
         }
     }
+
+    public static boolean validateApiKeyHash(String requestApiKey, String storedApiKeyHash, Environment environment) {
+    	String apiKey = removeApiKeyPrefix(requestApiKey, environment);
+        String apiKeyHash = hashApiKey(apiKey);
+        return MessageDigest.isEqual(
+    		apiKeyHash.getBytes(StandardCharsets.US_ASCII),
+    		storedApiKeyHash.getBytes(StandardCharsets.US_ASCII));
+    }
     
-    public static String getApiKeyPrefix(String merchantName) {
-    	return API_KEY_PREFIX + merchantName.substring(0, MERCHANT_PREFIX_LENGTH);
+    private static String getEnvApiKeyPrefix(Environment environment) {
+    	return environment == Environment.PROD ? 
+    			PROD_API_KEY_PREFIX : TEST_API_KEY_PREFIX;
     }
 
-    private static int getApiKeyPrefixLength() {
-    	return API_KEY_PREFIX.length() + MERCHANT_PREFIX_LENGTH;
+    public static String getApiKeyPrefix(String merchantName, Environment environment) {
+    	return getEnvApiKeyPrefix(environment) + merchantName.substring(0, Constants.MERCHANT_PREFIX_LENGTH);
+    }
+
+    private static int getApiKeyPrefixLength(Environment environment) {
+    	return getEnvApiKeyPrefix(environment).length() + Constants.MERCHANT_PREFIX_LENGTH;
     }
     
-    public static String extractKeyPrefix(String apiKey) throws IllegalArgumentException {
-        int prefixLength = getApiKeyPrefixLength() + 8;
+    public static String extractKeyPrefix(String apiKey, Environment environment) throws IllegalArgumentException {
+        int prefixLength = getApiKeyPrefixLength(environment) + Constants.Key_PREFIX_LENGTH;
 
         if (apiKey.length() < prefixLength) {
             throw new IllegalArgumentException("Invalid API key format");
@@ -57,8 +70,8 @@ public class ApiKeyUtils {
     }
     
 
-    public static String removeApiKeyPrefix(String providedApiKey) {
-        return providedApiKey.substring(getApiKeyPrefixLength());
+    private static String removeApiKeyPrefix(String providedApiKey, Environment environment) {
+        return providedApiKey.substring(getApiKeyPrefixLength(environment));
     }
     
 }

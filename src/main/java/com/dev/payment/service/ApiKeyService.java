@@ -1,9 +1,7 @@
 package com.dev.payment.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -15,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.dev.payment.entity.ApiKey;
 import com.dev.payment.entity.Merchant;
+import com.dev.payment.enums.ApiKeyPermission;
+import com.dev.payment.enums.Environment;
 import com.dev.payment.enums.MerchantStatus;
 import com.dev.payment.exception.ResourceNotFoundException;
 import com.dev.payment.model.ApiDetailsResponse;
@@ -28,6 +28,7 @@ import com.dev.payment.util.Constants;
 @Service
 public class ApiKeyService {
 
+
 	private final ApiKeyRepository apiKeyRepository;
 	private final MerchantRepository merchantRepository;
 
@@ -37,8 +38,8 @@ public class ApiKeyService {
 	}
 
 	@Transactional
-	public ResponseEntity<ApiResponse<ApiDetailsResponse>> generateApiKeys(UUID merchantId) {
-		if (merchantId == null) {
+	public ResponseEntity<ApiResponse<ApiDetailsResponse>> generateApiKeys(UUID merchantId, Environment environment) {
+		if (merchantId == null || environment == null) {
 			return ResponseEntity
 					.status(HttpStatus.BAD_REQUEST)
 					.body(new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), Constants.MERCHANT_ID_REQUIRED, null));
@@ -50,15 +51,16 @@ public class ApiKeyService {
 						Constants.MERCHANT_NOT_FOUND
 				));
 
-		// 2. check if API keys issued for the merchant
-		if (merchant.getStatus() == MerchantStatus.ISSUED_API) {
+		// 2. check if environment - API keys issued for the merchant
+		if (apiKeyRepository.existsByMerchantIdAndEnvironment(merchantId, environment)) {
 			return ResponseEntity
 					.status(HttpStatus.CONFLICT)
 					.body(new ApiResponse<>(false, HttpStatus.CONFLICT.value(), Constants.MERCHANT_API_KEY_EXISTS, null));
 		}
 
 		// 3. check if merchant status is not approved
-		if (merchant.getStatus() != MerchantStatus.APPROVED) {
+		if (merchant.getStatus() != MerchantStatus.APPROVED &&
+			    merchant.getStatus() != MerchantStatus.ACTIVE) {
 			return ResponseEntity
 					.status(HttpStatus.BAD_REQUEST)
 					.body(new ApiResponse<>(false, HttpStatus.BAD_REQUEST.value(), Constants.MERCHANT_NOT_APPROVED, null));
@@ -67,25 +69,30 @@ public class ApiKeyService {
 		// 4. create 2 ApiKey entities:
 		// 1st one with 2 permissions (read and write)
 		// 2nd one with 1 permission (read)
-		List<Set<String>> permissionSets = Arrays.asList(
-				new LinkedHashSet<>(Arrays.asList(Constants.CREATE_PERMISSION, Constants.READ_PERMISSION)),
-				new LinkedHashSet<>(Collections.singletonList(Constants.READ_PERMISSION))
-		);
+		List<Set<ApiKeyPermission>> permissionSets = List.of(
+			    EnumSet.of(
+			        ApiKeyPermission.PAYMENT_CREATE,
+			        ApiKeyPermission.PAYMENT_READ
+			    ),
+			    EnumSet.of(
+			        ApiKeyPermission.PAYMENT_READ
+			    )
+			);
 
 		List<ApiKeyResponse> apiKeys = new ArrayList<>();
 
-		for (Set<String> permissions : permissionSets) {
+		for (Set<ApiKeyPermission> permissions : permissionSets) {
 			// generate raw api key
 			String rawApiKey = ApiKeyUtils.generateApiKey();
 
 			// get prefix
-			String prefix = ApiKeyUtils.getApiKeyPrefix(merchant.getName());
+			String prefix = ApiKeyUtils.getApiKeyPrefix(merchant.getName(), environment);
 
 			// api key with prefix
 			String fullApiKey = prefix + rawApiKey;
 
 			// extract prefix key to store in DB
-			String keyPrefix = ApiKeyUtils.extractKeyPrefix(fullApiKey);
+			String keyPrefix = ApiKeyUtils.extractKeyPrefix(fullApiKey, environment);
 
 			// hash only the api key without prefix
 			String keyHash = ApiKeyUtils.hashApiKey(rawApiKey);
@@ -96,12 +103,13 @@ public class ApiKeyService {
 			apiKey.setKeyPrefix(keyPrefix);
 			apiKey.setKeyHash(keyHash);
 			apiKey.setIsActive(true);
-			apiKey.setPermission(permissions);
+			apiKey.setEnvironment(environment);
+			apiKey.setPermissions(permissions);
 
 			apiKeyRepository.save(apiKey);
 
-			// return the apikey with prefix to the client
 			ApiKeyResponse apiKeyResponse = new ApiKeyResponse();
+			// return the apikey with prefix to the client
 			apiKeyResponse.setApiKey(fullApiKey);
 			apiKeyResponse.setPermissions(permissions);
 
@@ -110,7 +118,7 @@ public class ApiKeyService {
 		ApiDetailsResponse apiDetailsResponse = new ApiDetailsResponse(Constants.DOMAIN, 
 				Constants.CREATE_PAYMENT_ENDPOINT, Constants.READ_PAYMENT_ENDPOINT, apiKeys);
 		
-		merchant.setStatus(MerchantStatus.ISSUED_API);
+		merchant.setStatus(MerchantStatus.ACTIVE);
 
 		return ResponseEntity
 				.status(HttpStatus.CREATED)

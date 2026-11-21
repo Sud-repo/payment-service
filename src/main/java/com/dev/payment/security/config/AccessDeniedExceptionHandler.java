@@ -23,7 +23,7 @@ class AccessDeniedExceptionHandler implements AccessDeniedHandler {
 
         final Map<String, Object> mapBodyException = new HashMap<>();
         mapBodyException.put("success", "false");
-        mapBodyException.put("Status code", HttpStatus.FORBIDDEN.value());
+        mapBodyException.put("statusCode", HttpStatus.FORBIDDEN.value());
         mapBodyException.put("message", "Insufficient privileges");
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);

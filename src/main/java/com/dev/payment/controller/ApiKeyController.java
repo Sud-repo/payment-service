@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dev.payment.enums.Environment;
 import com.dev.payment.model.ApiDetailsResponse;
 import com.dev.payment.model.ApiResponse;
 import com.dev.payment.service.ApiKeyService;
@@ -23,8 +24,9 @@ public class ApiKeyController {
 	}
 
 	@PostMapping("/generate")
-	public ResponseEntity<ApiResponse<ApiDetailsResponse>> createApiKeys(@RequestParam UUID merchantId) {
-		return apiKeyService.generateApiKeys(merchantId);
+	public ResponseEntity<ApiResponse<ApiDetailsResponse>> createApiKeys(@RequestParam UUID merchantId,
+			@RequestParam Environment environment) {
+		return apiKeyService.generateApiKeys(merchantId, environment);
 	}
 
 }

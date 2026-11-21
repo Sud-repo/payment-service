@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.dev.payment.enums.MerchantStatus;
 import com.dev.payment.security.entity.User;
+import com.dev.payment.util.Constants;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Entity;
@@ -29,9 +30,9 @@ public class Merchant {
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
-	@Size(min = 3)
+	@Size(min = Constants.MERCHANT_PREFIX_LENGTH)
 	private String name;
-
+	
 	@Enumerated(EnumType.STRING)
 	private MerchantStatus status;
 

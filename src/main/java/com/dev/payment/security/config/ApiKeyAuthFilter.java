@@ -2,16 +2,25 @@ package com.dev.payment.security.config;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.dev.payment.entity.ApiKey;
 import com.dev.payment.entity.Merchant;
+import com.dev.payment.enums.Environment;
+import com.dev.payment.enums.MerchantStatus;
 import com.dev.payment.model.MerchantContext;
 import com.dev.payment.repository.ApiKeyRepository;
 import com.dev.payment.security.entity.User;
@@ -29,73 +38,100 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
 	private final ApiKeyRepository apiKeyRepository;
 
-	public static final ThreadLocal<MerchantContext> MERCHANT_CONTEXT = new ThreadLocal<>();
-
     public ApiKeyAuthFilter(ApiKeyRepository apiKeyRepository) {
         this.apiKeyRepository = apiKeyRepository;
     }
-
+    
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
     	String requestApiKey = request.getHeader(API_KEY_HEADER);
-    	String merchantName = request.getHeader("merchant");
-
-        if (!StringUtils.hasText(requestApiKey) || !StringUtils.hasText(merchantName)
-        		|| !requestApiKey.startsWith(ApiKeyUtils.getApiKeyPrefix(merchantName))) {
+        if (!StringUtils.hasText(requestApiKey)) {
             writeUnauthorized(response);
             return;
         }
 
-        final String keyPrefix;
-
         try {
-            keyPrefix = ApiKeyUtils.extractKeyPrefix(requestApiKey);
-
+        	Environment merchantEnvironment = requestApiKey.contains("live") ? Environment.PROD: Environment.TEST;
+        	String keyPrefix = ApiKeyUtils.extractKeyPrefix(requestApiKey, merchantEnvironment);
 	        Optional<ApiKey> optApiKey =
 	                apiKeyRepository.findByKeyPrefixAndIsActiveTrue(keyPrefix);
-	
+
 	        if (optApiKey.isEmpty()) {
 	            writeUnauthorized(response);
 	            return;
 	        }
-	
+
 	        ApiKey apiKey = optApiKey.get();
 	        Merchant merchant = apiKey.getMerchant();
 	        User user = merchant.getUser();
-	
-	        if (!isValidApiKey(requestApiKey, apiKey) 
-	        		|| !merchant.getName().equals(merchantName) || !user.getIsActive()) {
+
+	        if (!validateApiKey(requestApiKey, apiKey) 
+	        		|| !validateMerchant(merchant, user)) {
 	            writeUnauthorized(response);
 	            return;
 	        }
-	        MERCHANT_CONTEXT.set(new MerchantContext(
+
+	        MerchantContext merchantContext = new MerchantContext(
 	        		merchant.getId(), 
 	        		merchant.getName(), 
-	        		user.getUserName()));
+	        		user.getUserName()
+	        );
+
+	        // Set Spring Security Authentication
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            merchantContext,
+                            null,
+                            getAuthorities(apiKey) // handle permission validation
+                    );
+
+            SecurityContext securityContext =
+                    SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authentication);
+            SecurityContextHolder.setContext(securityContext);
+
+            filterChain.doFilter(request, response);
+
         } catch (IllegalArgumentException ex) {
             writeUnauthorized(response);
-            return;
+        } finally {
+            SecurityContextHolder.clearContext();
         }
-        filterChain.doFilter(request, response);
+    }
+
+
+    private boolean validateMerchant(Merchant merchant, User user) {
+    	return merchant.getStatus() == MerchantStatus.ACTIVE
+                && Boolean.TRUE.equals(user.getIsActive());
+	}
+
+
+	private boolean validateApiKey(String requestApiKey, ApiKey apiKeyEntity) {
+		return Boolean.TRUE.equals(apiKeyEntity.getIsActive())
+	            && ApiKeyUtils.validateApiKeyHash(
+	                    requestApiKey,
+	                    apiKeyEntity.getKeyHash(),
+	                    apiKeyEntity.getEnvironment()
+	            )
+//	            && apiKeyExpiration Check
+	            ;
 
     }
-    
-    private boolean isValidApiKey(String requestApiKey, ApiKey apiKeyEntity) {
-    	if (!apiKeyEntity.getIsActive() ||
-//    			apiKeyEntity.getExpiresAt().after(new Date()) ||
-    			apiKeyEntity.getPermission().isEmpty()) {
-    		return false;
-    	}
 
-    	String apiKey = ApiKeyUtils.removeApiKeyPrefix(requestApiKey);
-        String apiKeyHash = ApiKeyUtils.hashApiKey(apiKey);
-        return MessageDigest.isEqual(
-    		apiKeyHash.getBytes(StandardCharsets.US_ASCII),
-    		apiKeyEntity.getKeyHash().getBytes(StandardCharsets.US_ASCII)
-        );
-    }
+	private Collection<GrantedAuthority> getAuthorities(ApiKey apiKey) {
+
+	    List<GrantedAuthority> authorities = new ArrayList<>();
+
+	    apiKey.getPermissions().forEach(permission ->
+	            authorities.add(
+	                    new SimpleGrantedAuthority(permission.toString())
+	            )
+	    );
+
+	    return authorities;
+	}
 
     private void writeUnauthorized(
             HttpServletResponse response) throws IOException {
@@ -107,7 +143,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         response.getWriter().write(
                 "{\"success\":false,"
                 + "\"statusCode\":401,"
-                + "\"message\":\"Invalid or missing API key\"}"
+                + "\"message\":\"Invalid API key\"}"
         );
     }
 

@@ -26,7 +26,7 @@ public class JwtService {
         this.jwtEncoder = jwtEncoder;
     }
 
-    public String generateToken(String userName, String role) {
+    public String generateToken(String userName, String role, String merchantName) {
 
         Instant now = Instant.now();
 
@@ -34,9 +34,10 @@ public class JwtService {
             .issuer(issuer)
             .audience(List.of(Constants.AUDIENCE))
             .subject(userName)
+            .claim("merchant", merchantName)
+            .claim("role", role)
             .issuedAt(now)
             .expiresAt(now.plus(15, ChronoUnit.MINUTES))
-            .claim("role", role)
             .build();
 
         JwsHeader header = JwsHeader
